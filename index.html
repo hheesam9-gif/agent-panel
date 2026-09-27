@@ -315,6 +315,25 @@
     font-size:12.5px;line-height:1.9;color:var(--text-dim);margin-bottom:2px;
   }
   .rule-section li b{color:var(--text);font-weight:600;}
+   .rules-search-wrap{
+    position:sticky; top:0; z-index:5; padding-bottom:12px; margin-bottom:2px;
+    background:var(--card-bg);
+  }
+  .rules-search{
+    width:100%; box-sizing:border-box;
+    background:var(--input-bg); border:1px solid var(--input-border); color:var(--text);
+    border-radius:12px; padding:10px 14px; font-family:inherit; font-size:13px; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .rules-search::placeholder{color:var(--text-faint);}
+  .rules-search:focus{border-color:var(--accent1);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent1) 22%, transparent);}
+  .rule-section mark{
+    background:color-mix(in srgb, var(--accent1) 45%, transparent);
+    color:#fff; border-radius:4px; padding:0 2px;
+  }
+  .rules-noresult{
+    display:none; text-align:center; color:var(--text-faint); font-size:12.5px; padding:20px 0;
+  }
 
   @media (max-width:520px){ .status-line{flex-wrap:wrap;row-gap:8px;} }
 
@@ -415,7 +434,10 @@
       <h2>📜 قوانین شرکت</h2>
       <button type="button" class="rules-close" id="rulesClose">✕</button>
     </div>
-
+    <div class="rules-search-wrap">
+      <input type="text" id="rulesSearch" class="rules-search" placeholder="🔍 جستجو در قوانین... (مثلاً بارکش، موتورسیکلت، تسویه)">
+    </div>
+    <div class="rules-noresult" id="rulesNoResult">چیزی پیدا نشد 🤷‍♂️</div>
     <div class="rule-section">
       <h3>📄 قرارداد</h3>
       <ul>
@@ -579,15 +601,58 @@ soundToggle.addEventListener('click', ()=>{
   renderSoundState();
   if(soundOn){ ensureCtx(); playClickSound(); }
 });
- const rulesBtn = document.getElementById('rulesBtn');
+const rulesBtn = document.getElementById('rulesBtn');
 const rulesOverlay = document.getElementById('rulesOverlay');
 const rulesClose = document.getElementById('rulesClose');
-function openRules(){ rulesOverlay.classList.add('show'); }
+const rulesSearch = document.getElementById('rulesSearch');
+const rulesNoResult = document.getElementById('rulesNoResult');
+
+function openRules(){
+  rulesOverlay.classList.add('show');
+  rulesSearch.value = '';
+  filterRules('');
+  setTimeout(()=>rulesSearch.focus(), 100);
+}
 function closeRules(){ rulesOverlay.classList.remove('show'); }
 rulesBtn.addEventListener('click', openRules);
 rulesClose.addEventListener('click', closeRules);
 rulesOverlay.addEventListener('click', e=>{ if(e.target === rulesOverlay) closeRules(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRules(); });
+
+const ruleLiOriginal = new Map();
+document.querySelectorAll('.rule-section li').forEach(li=>{
+  ruleLiOriginal.set(li, li.textContent);
+});
+
+function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function highlightText(text, query){
+  if(!query) return text;
+  const re = new RegExp('(' + escapeRegExp(query) + ')', 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function filterRules(query){
+  const q = query.trim();
+  let totalVisible = 0;
+  document.querySelectorAll('.rule-section').forEach(section=>{
+    let sectionVisible = 0;
+    section.querySelectorAll('li').forEach(li=>{
+      const original = ruleLiOriginal.get(li);
+      const match = !q || original.toLowerCase().includes(q.toLowerCase());
+      li.style.display = match ? '' : 'none';
+      if(match){
+        sectionVisible++;
+        li.innerHTML = highlightText(original, q);
+      }
+    });
+    section.style.display = sectionVisible ? '' : 'none';
+    totalVisible += sectionVisible;
+  });
+  rulesNoResult.style.display = totalVisible ? 'none' : 'block';
+}
+
+rulesSearch.addEventListener('input', ()=> filterRules(rulesSearch.value));
 
 const tbody = document.getElementById('tbody');
 tbody.innerHTML = accounts.map((a) => `
