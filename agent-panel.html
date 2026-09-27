@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بیمه معلم | پنل دسترسی نمایندگان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d16;
+    --panel-solid:#111625;
+    --line:#1e2338;
+    --line-gold:rgba(184,147,74,.4);
+    --gold:#b8934a;
+    --gold-light:#e8cf8a;
+    --gold-dim:#7c6534;
+    --ink:#eef0f7;
+    --muted:#838aa6;
+    --muted-2:#565d78;
+    --ok:#3fd99a;
+    --warn:#e8b25e;
+    --mx:50%; --my:50%;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;}
+  body{
+    margin:0;min-height:100%;color:var(--ink);
+    font-family:'Vazirmatn',sans-serif;
+    background:var(--bg);
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    position:relative;overflow-x:hidden;
+    display:flex;flex-direction:column;
+  }
+
+  .aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .aurora span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;}
+  .aurora span:nth-child(1){width:520px;height:420px;top:-160px;right:-120px;background:#1c2a5c;animation:drift1 22s ease-in-out infinite;}
+  .aurora span:nth-child(2){width:420px;height:420px;bottom:-180px;left:-100px;background:#3a2c14;animation:drift2 26s ease-in-out infinite;}
+  .aurora span:nth-child(3){width:340px;height:340px;top:40%;left:50%;background:#241f42;animation:drift3 30s ease-in-out infinite;}
+  @keyframes drift1{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,50px);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0);}50%{transform:translate(50px,-30px);}}
+  @keyframes drift3{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-46%,-54%) scale(1.15);}}
+
+  .dust{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  .dust i{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;
+    background:var(--gold-light);opacity:0;animation:rise linear infinite;box-shadow:0 0 6px var(--gold-light);}
+  @keyframes rise{
+    0%{transform:translateY(0) translateX(0);opacity:0;}
+    10%{opacity:.5;}
+    90%{opacity:.3;}
+    100%{transform:translateY(-100vh) translateX(var(--dx,20px));opacity:0;}
+  }
+
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;
+    background-image:radial-gradient(circle, #ffffff08 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+
+  .ribbon{
+    height:2px;flex:none;position:relative;z-index:1;
+    background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold-light) 50%,var(--gold) 80%,transparent);
+    background-size:200% 100%;animation:ribbon-flow 6s linear infinite;
+  }
+  @keyframes ribbon-flow{0%{background-position:0% 0;}100%{background-position:200% 0;}}
+
+  header.topbar{position:relative;z-index:1;flex:none;padding:26px 24px 12px;text-align:center;}
+  .emblem{position:relative;width:64px;height:64px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;}
+  .emblem .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--line-gold);animation:ring-pulse 3.2s ease-in-out infinite;}
+  .emblem .ring.r2{inset:7px;animation-delay:.4s;}
+  @keyframes ring-pulse{0%,100%{opacity:.25;transform:scale(1);}50%{opacity:.7;transform:scale(1.05);}}
+  .emblem::before{
+    content:'';position:absolute;inset:-5px;border-radius:50%;
+    background:radial-gradient(circle, #b8934a3a, transparent 70%);
+    animation:glow-breathe 3.2s ease-in-out infinite;
+  }
+  @keyframes glow-breathe{0%,100%{opacity:.6;}50%{opacity:1;}}
+  .emblem .mark{
+    position:relative;height:40px;width:40px;display:flex;align-items:center;justify-content:center;
+    border-radius:50%;background:linear-gradient(160deg,#1a2038,#0d1120);border:1px solid var(--line-gold);
+    color:var(--gold-light);font-weight:800;font-size:16px;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));
+    animation:emblem-in .8s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes emblem-in{from{opacity:0;transform:scale(.8) translateY(6px);}to{opacity:1;transform:none;}}
+
+  header .brand h1{
+    margin:0;font-weight:800;font-size:clamp(20px,2.6vw,26px);
+    letter-spacing:.4px;color:var(--gold-light);
+    text-shadow:0 0 30px rgba(232,207,138,.16);
+    animation:rise-in .7s .12s cubic-bezier(.2,.8,.2,1) both;
+  }
+  header .brand p{margin:6px 0 0;color:var(--muted);font-size:12px;letter-spacing:.2px;
+    animation:rise-in .7s .22s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes rise-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .status-line{
+    position:relative;z-index:1;flex:none;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    margin:10px auto 0;color:var(--muted);font-size:11.5px;
+    animation:rise-in .7s .32s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .status-line .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);position:relative;}
+  .status-line .dot.offline{background:var(--warn);}
+  .status-line .dot::after{
+    content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid var(--ok);
+    animation:dot-sonar 2s ease-out infinite;
+  }
+  .status-line .dot.offline::after{border-color:var(--warn);}
+  @keyframes dot-sonar{0%{transform:scale(.4);opacity:.9;}100%{transform:scale(2.4);opacity:0;}}
+  .status-line b{color:var(--gold-light);font-weight:600;font-variant-numeric:tabular-nums;}
+  .status-line .sep{width:1px;height:11px;background:var(--line);}
+
+  .sound-toggle{
+    display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:20px;padding:4px 11px 4px 9px;cursor:pointer;font-size:11px;
+    font-family:'Vazirmatn',sans-serif;transition:border-color .2s,color .2s,background .2s;
+  }
+  .sound-toggle:hover{border-color:var(--line-gold);color:var(--gold-light);background:#b8934a0f;}
+  .sound-toggle:focus-visible{outline:1.5px solid var(--gold);outline-offset:2px;}
+  .sound-toggle svg{width:13px;height:13px;flex:none;}
+  .sound-toggle .off-line{display:none;}
+  .sound-toggle[data-on="false"] .off-line{display:block;}
+  .sound-toggle[data-on="false"] .waves{display:none;}
+
+  main{
+    position:relative;z-index:1;flex:1;min-height:0;
+    max-width:920px;width:100%;margin:0 auto;padding:16px 16px 14px;
+    display:flex;flex-direction:column;
+  }
+
+  .frame{
+    position:relative;padding:1px;border-radius:6px;flex:none;
+    background:linear-gradient(180deg, var(--line-gold), #1e233800 40%, var(--line-gold));
+    animation:frame-in .7s .08s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes frame-in{from{opacity:0;transform:translateY(10px) scale(.99);}to{opacity:1;transform:none;}}
+  .frame .corner{position:absolute;width:14px;height:14px;border-color:var(--gold);z-index:2;}
+  .frame .corner.tl{top:-1px;left:-1px;border-top:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .frame .corner.tr{top:-1px;right:-1px;border-top:2px solid var(--gold);border-left:2px solid var(--gold);}
+  .frame .corner.bl{bottom:-1px;left:-1px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold);}
+  .frame .corner.br{bottom:-1px;right:-1px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold);}
+
+  .table-wrap{
+    position:relative;overflow:hidden;border-radius:5px;background:var(--panel-solid);
+    box-shadow:0 30px 60px -18px rgba(0,0,0,.6);
+  }
+  .table-wrap::before{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .3s;
+    background:radial-gradient(320px circle at var(--mx) var(--my), #b8934a14, transparent 60%);
+  }
+  .table-wrap:hover::before{opacity:1;}
+
+  .table-scroll{overflow-x:auto;position:relative;z-index:2;}
+  table{width:100%;border-collapse:collapse;min-width:600px;}
+  thead th{
+    padding:10px 12px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.2px;
+    border-bottom:1px solid var(--line);background:#0d1120;position:relative;
+  }
+  thead th::after{
+    content:'';position:absolute;bottom:-1px;right:12px;left:12px;height:1px;
+    background:linear-gradient(90deg, var(--gold), transparent);
+  }
+  thead th.credential{color:var(--gold-light);}
+  tbody tr{transition:background .15s;opacity:0;animation:row-in .45s cubic-bezier(.2,.8,.2,1) forwards;
+    animation-delay:calc(.3s + var(--i,0) * 45ms);}
+  @keyframes row-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  tbody td{padding:8px 12px;text-align:center;font-size:13.5px;border-bottom:1px solid var(--line);}
+  tbody tr:hover{background:#ffffff06;}
+  tbody tr:last-child td{border-bottom:none;}
+
+  td.credential{
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:500;color:var(--gold-light);
+    direction:ltr;cursor:pointer;letter-spacing:.2px;position:relative;transition:color .15s;
+  }
+  td.credential .copy-hint{
+    opacity:0;margin-inline-start:7px;font-size:10.5px;color:var(--muted-2);
+    font-family:'Vazirmatn',sans-serif;transition:opacity .15s, transform .15s;transform:translateX(-4px);
+    display:inline-block;
+  }
+  td.credential:hover{color:#fff;}
+  td.credential:hover .copy-hint{opacity:1;transform:translateX(0);}
+  td.credential:focus-visible{outline:1.5px solid var(--gold);outline-offset:2px;}
+  td.credential.copied{color:var(--ok)!important;}
+  td.credential .burst{position:absolute;inset:0;pointer-events:none;border-radius:8px;}
+  td.credential .burst span{
+    position:absolute;top:50%;left:50%;width:5px;height:5px;border-radius:50%;
+    background:var(--ok);transform:translate(-50%,-50%);opacity:0;
+  }
+  td.credential.copied .burst span{animation:burst-out .55s ease-out forwards;}
+  @keyframes burst-out{
+    from{opacity:1;transform:translate(-50%,-50%) translate(0,0) scale(1);}
+    to{opacity:0;transform:translate(-50%,-50%) translate(var(--bx),var(--by)) scale(.3);}
+  }
+
+  td.name-cell{padding:6px 8px;}
+  td.name-cell input{
+    width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 9px;color:var(--ink);
+    font-family:'Vazirmatn',sans-serif;font-size:12.5px;text-align:center;background:#0d1120;outline:none;
+    transition:border-color .2s, box-shadow .2s, opacity .2s;
+  }
+  td.name-cell input::placeholder{color:var(--muted-2);}
+  td.name-cell input:focus{border-color:var(--gold);box-shadow:0 0 0 3px #b8934a22;}
+  td.name-cell input.remote-update{animation:remote-flash .7s ease;}
+  @keyframes remote-flash{0%{box-shadow:0 0 0 3px #3fd99a55;}100%{box-shadow:0 0 0 0 #3fd99a00;}}
+  td.name-cell input:disabled{opacity:.5;cursor:not-allowed;}
+
+  tfoot td{padding:9px 12px;font-weight:600;font-size:12px;border-top:1px solid var(--line);background:#0d1120;}
+  tfoot .count-label{color:var(--muted);text-align:start;}
+  tfoot .count-val{color:var(--gold-light);text-align:start;font-variant-numeric:tabular-nums;transition:transform .2s;}
+  tfoot .count-val.bump{animation:bump .3s ease;}
+  @keyframes bump{0%{transform:scale(1);}40%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px) scale(.96);
+    background:var(--panel-solid);border:1px solid var(--gold);color:var(--gold-light);padding:9px 20px;
+    border-radius:8px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:50;box-shadow:0 16px 40px rgba(0,0,0,.5);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
+  .toast.warn{border-color:var(--warn);color:var(--warn);}
+
+  .reset-note{max-width:600px;margin:9px auto 0;text-align:center;color:var(--muted-2);font-size:11px;line-height:1.7;position:relative;z-index:1;flex:none;}
+  .reset-note b{color:var(--gold);font-weight:600;}
+  footer{position:relative;z-index:1;flex:none;text-align:center;color:var(--muted-2);font-size:11px;padding:10px 0 4px;letter-spacing:.2px;}
+
+  @media (max-width:520px){
+    .status-line{flex-wrap:wrap;row-gap:8px;}
+  }
+
+  /* stacked-card layout on narrow screens: no horizontal scroll */
+  @media (max-width:680px){
+    .table-scroll{overflow-x:visible;}
+    table{min-width:0;}
+    thead{display:none;}
+    tbody, tbody tr, tbody td{display:block;width:100%;}
+    tbody tr{
+      padding:10px 12px 4px;border-bottom:1px solid var(--line);
+    }
+    tbody tr:last-child{border-bottom:none;}
+    tbody td{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:6px 0;border-bottom:none;text-align:start;
+    }
+    tbody td::before{
+      content:attr(data-label);flex:none;font-size:11px;color:var(--muted);
+    }
+    td.credential{padding:8px 0;}
+    td.name-cell input{width:58%;}
+  }
+
+  @media (max-height:760px){
+    header.topbar{padding:16px 24px 8px;}
+    .emblem{width:48px;height:48px;margin-bottom:8px;}
+    .emblem .mark{height:30px;width:30px;font-size:13px;}
+    header .brand h1{font-size:clamp(18px,2.4vw,22px);}
+    header .brand p{font-size:11px;margin-top:4px;}
+    .status-line{margin-top:8px;}
+    main{padding:12px 16px 8px;}
+    thead th{padding:7px 10px;}
+    tbody td{padding:6px 10px;font-size:13px;}
+    td.name-cell input{padding:5px 8px;}
+    .reset-note{display:none;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .frame, .emblem .mark, header .brand h1, header .brand p, .status-line, tbody tr{animation:none;opacity:1;}
+    .aurora span, .dust i, .ribbon, .emblem .ring, .status-line .dot::after{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora"><span></span><span></span><span></span></div>
+<div class="dust" id="dust"></div>
+
+<div class="ribbon"></div>
+
+<header class="topbar">
+  <div class="emblem">
+    <span class="ring"></span><span class="ring r2"></span>
+    <span class="mark">بم</span>
+  </div>
+  <div class="brand">
+    <h1>بیمه معلم</h1>
+    <p>پنل دسترسی نمایندگان بیمه ثالث</p>
+  </div>
+</header>
+
+<div class="status-line">
+  <span class="dot" id="liveDot"></span><span id="liveText">هم‌اکنون <b id="liveCount">۰</b> حساب کاربری فعال</span>
+  <span class="sep"></span>
+  <button type="button" class="sound-toggle" id="soundToggle" data-on="true" aria-pressed="true">
+    <svg class="waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+    <svg class="off-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 9l5 5M22 9l-5 5"/></svg>
+    <span id="soundLabel">صدای کپی: روشن</span>
+  </button>
+</div>
+
+<main>
+  <div class="frame">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <div class="table-wrap" id="tableWrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="credential">نام کاربری</th>
+              <th class="credential">رمز عبور</th>
+              <th>نفر اول</th>
+              <th>نفر دوم</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" class="count-label">تعداد نماینده ثبت‌شده</td>
+              <td colspan="2" class="count-val" id="repCount">۰</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="reset-note">روی نام کاربری یا رمز کلیک کن تا کپی بشه. نام نماینده رو انگلیسی بنویس، خودکار فارسی میشه. اسم‌ها برای همه‌ی افرادی که این صفحه رو باز کردن <b>هم‌زمان</b> نمایش داده می‌شن. هر شب ساعت <b>۰۰:۰۰</b> نام‌ها پاک می‌شن.</p>
+  <footer>بیمه معلم — پنل داخلی نمایندگان</footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const accounts = [
+  {id:'01', user:'Agnt4763.01', pass:'A@954368'},
+  {id:'02', user:'Agnt4763.02', pass:'A@549683'},
+  {id:'03', user:'Agnt4763.03', pass:'A@495863'},
+  {id:'04', user:'Agnt4763.04', pass:'A@953846'},
+  {id:'05', user:'Agnt4763.05', pass:'A@586934'},
+  {id:'06', user:'Agnt4763.06', pass:'A@368549'},
+  {id:'07', user:'Agnt4763.07', pass:'A@489563'},
+];
+const faDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+const toFa = s => String(s).split('').map(c => (c>='0'&&c<='9') ? faDigits[+c] : c).join('');
+
+const dustEl = document.getElementById('dust');
+for(let i=0;i<14;i++){
+  const p = document.createElement('i');
+  p.style.left = (Math.random()*100)+'%';
+  p.style.setProperty('--dx',(Math.random()*60-30)+'px');
+  p.style.animationDuration = (10+Math.random()*10)+'s';
+  p.style.animationDelay = (Math.random()*10)+'s';
+  dustEl.appendChild(p);
+}
+
+function countUp(el, to, dur){
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/dur);
+    const eased = 1 - Math.pow(1-t, 3);
+    el.textContent = toFa(Math.round(eased*to));
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+countUp(document.getElementById('liveCount'), accounts.length, 900);
+
+const SOUND_KEY = 'bmagent-sound';
+let soundOn = localStorage.getItem(SOUND_KEY) !== 'off';
+let audioCtx = null;
+function ensureCtx(){
+  if(!audioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(Ctx) audioCtx = new Ctx();
+  }
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playClickSound(){
+  if(!soundOn) return;
+  const ctx = ensureCtx();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  const tick = ctx.createOscillator();
+  const tickGain = ctx.createGain();
+  tick.type = 'triangle';
+  tick.frequency.setValueAtTime(1500, now);
+  tick.frequency.exponentialRampToValueAtTime(900, now + 0.05);
+  tickGain.gain.setValueAtTime(0.0001, now);
+  tickGain.gain.exponentialRampToValueAtTime(0.16, now + 0.006);
+  tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+  tick.connect(tickGain).connect(ctx.destination);
+  tick.start(now); tick.stop(now + 0.1);
+
+  const body = ctx.createOscillator();
+  const bodyGain = ctx.createGain();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(320, now);
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.05, now + 0.008);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+  body.connect(bodyGain).connect(ctx.destination);
+  body.start(now); body.stop(now + 0.13);
+}
+
+const soundToggle = document.getElementById('soundToggle');
+const soundLabel = document.getElementById('soundLabel');
+function renderSoundState(){
+  soundToggle.dataset.on = soundOn ? 'true' : 'false';
+  soundToggle.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+  soundLabel.textContent = soundOn ? 'صدای کپی: روشن' : 'صدای کپی: خاموش';
+}
+renderSoundState();
+soundToggle.addEventListener('click', ()=>{
+  soundOn = !soundOn;
+  localStorage.setItem(SOUND_KEY, soundOn ? 'on' : 'off');
+  renderSoundState();
+  if(soundOn){ ensureCtx(); playClickSound(); }
+});
+
+const tbody = document.getElementById('tbody');
+tbody.innerHTML = accounts.map((a,idx) => `
+  <tr style="--i:${idx}">
+    <td class="credential" data-label="نام کاربری" tabindex="0" data-copy="${a.user}">${a.user}<span class="copy-hint">کپی</span><span class="burst"></span></td>
+    <td class="credential" data-label="رمز عبور" tabindex="0" data-copy="${a.pass}">${a.pass}<span class="copy-hint">کپی</span><span class="burst"></span></td>
+    <td class="name-cell" data-label="نفر اول"><input type="text" placeholder="مثلاً amir" data-key="${a.id}-1" disabled></td>
+    <td class="name-cell" data-label="نفر دوم"><input type="text" placeholder="مثلاً sara" data-key="${a.id}-2" disabled></td>
+  </tr>
+`).join('');
+
+const tableWrap = document.getElementById('tableWrap');
+tableWrap.addEventListener('mousemove', e=>{
+  const r = tableWrap.getBoundingClientRect();
+  tableWrap.style.setProperty('--mx', (e.clientX-r.left)+'px');
+  tableWrap.style.setProperty('--my', (e.clientY-r.top)+'px');
+});
+
+const toast = document.getElementById('toast');
+let toastTimer;
+function showToast(msg, warn){
+  toast.textContent = msg;
+  toast.classList.toggle('warn', !!warn);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 1800);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity=0;
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(_){}
+    document.body.removeChild(ta);
+  }
+}
+function spawnBurst(cell){
+  const burst = cell.querySelector('.burst');
+  burst.innerHTML = '';
+  const n = 8;
+  for(let i=0;i<n;i++){
+    const s = document.createElement('span');
+    const angle = (Math.PI*2*i)/n;
+    const dist = 20 + Math.random()*8;
+    s.style.setProperty('--bx', Math.cos(angle)*dist+'px');
+    s.style.setProperty('--by', Math.sin(angle)*dist+'px');
+    burst.appendChild(s);
+  }
+}
+function triggerCopy(cell){
+  copyText(cell.dataset.copy);
+  cell.classList.remove('copied'); void cell.offsetWidth;
+  spawnBurst(cell);
+  cell.classList.add('copied');
+  playClickSound();
+  showToast('کپی شد ✓');
+  setTimeout(()=>cell.classList.remove('copied'), 900);
+}
+tbody.addEventListener('click', e=>{
+  const cell = e.target.closest('.credential');
+  if(!cell) return;
+  triggerCopy(cell);
+});
+tbody.addEventListener('keydown', e=>{
+  const cell = e.target.closest('.credential');
+  if(!cell) return;
+  if(e.key==='Enter' || e.key===' '){ e.preventDefault(); triggerCopy(cell); }
+});
+
+const nameDict = {
+  amir:'امیر',ali:'علی',reza:'رضا',hassan:'حسن',hasan:'حسن',hossein:'حسین',hosein:'حسین',
+  mohammad:'محمد',mohamad:'محمد',mahdi:'مهدی',mehdi:'مهدی',javad:'جواد',hamed:'حامد',
+  saeed:'سعید',saeid:'سعید',mostafa:'مصطفی',ehsan:'احسان',arash:'آرش',babak:'بابک',
+  farhad:'فرهاد',kambiz:'کامبیز',keyvan:'کیوان',kourosh:'کوروش',sina:'سینا',shahab:'شهاب',
+  navid:'نوید',omid:'امید',payam:'پیام',iman:'ایمان',milad:'میلاد',danial:'دانیال',
+  daniyal:'دانیال',amin:'امین',arman:'آرمان',farzad:'فرزاد',kamran:'کامران',nima:'نیما',
+  pouya:'پویا',pooya:'پویا',siamak:'سیامک',soroush:'سروش',vahid:'وحید',yasser:'یاسر',
+  yaser:'یاسر',yousef:'یوسف',hesam:'حسام',roozbeh:'روزبه',bahram:'بهرام',bijan:'بیژن',
+  fatemeh:'فاطمه',zahra:'زهرا',sara:'سارا',mina:'مینا',maryam:'مریم',narges:'نرگس',
+  niloufar:'نیلوفر',parisa:'پریسا',roya:'رویا',sahar:'سحر',shirin:'شیرین',yasaman:'یاسمن',
+  zohreh:'زهره',azadeh:'آزاده',elham:'الهام',fariba:'فریبا',forough:'فروغ',ghazal:'غزال',
+  hoda:'هدی',leila:'لیلا',leyla:'لیلا',mahsa:'مهسا',nasrin:'نسرین',nazanin:'نازنین',
+  negar:'نگار',samira:'سمیرا',shabnam:'شبنم',tara:'تارا',yalda:'یلدا',atefeh:'عاطفه',
+  kashmiri:'کشمیری',yeganeh:'یگانه',fatemah:'فاطمه',
+  hosseini:'حسینی',hoseini:'حسینی',mohammadi:'محمدی',mohamadi:'محمدی',ahmadi:'احمدی',
+  rezaei:'رضایی',rezai:'رضایی',kazemi:'کاظمی',hashemi:'هاشمی',karimi:'کریمی',
+  moradi:'مرادی',ghasemi:'قاسمی',qasemi:'قاسمی',jafari:'جعفری',rostami:'رستمی',
+  sadeghi:'صادقی',shirazi:'شیرازی',tehrani:'تهرانی',esfahani:'اصفهانی',alavi:'علوی',
+  nouri:'نوری',akbari:'اکبری',abbasi:'عباسی',salehi:'صالحی',rahimi:'رحیمی',
+  ebrahimi:'ابراهیمی',vaziri:'وزیری',sharifi:'شریفی',rasouli:'رسولی',rasoli:'رسولی',
+  ghorbani:'قربانی',qorbani:'قربانی',bagheri:'باقری',bagery:'باقری',sadr:'صدر',
+  mousavi:'موسوی',mosavi:'موسوی',hosseinpour:'حسین‌پور',hoseinpour:'حسین‌پور'
+};
+function phonetic(rawWord){
+  const word = rawWord.replace(/([bcdfgjklmnpqrstvwxyz])\1/g, '$1');
+  const multi = [['kh','خ'],['gh','ق'],['sh','ش'],['ch','چ'],['zh','ژ'],['th','ث'],['ph','ف'],
+    ['ck','ک'],['aa','ا'],['oo','و'],['ou','و'],['ee','ی'],['ei','ی'],['ey','ی'],['ay','ای'],['ai','ای']];
+  const cons = {b:'ب',c:'ک',d:'د',f:'ف',g:'گ',h:'ه',j:'ج',k:'ک',l:'ل',m:'م',n:'ن',
+    p:'پ',q:'ق',r:'ر',s:'س',t:'ت',v:'و',w:'و',y:'ی',z:'ز',x:'کس'};
+  let out='', i=0;
+  const len = word.length;
+  while(i < len){
+    let matched=false;
+    for(const [pat,rep] of multi){
+      if(word.startsWith(pat,i)){
+        out += (i===0 && pat==='aa') ? 'آ' : rep;
+        i += pat.length; matched=true; break;
+      }
+    }
+    if(matched) continue;
+    const c = word[i];
+    if('aeiou'.includes(c)){
+      const isLast = (i === len-1);
+      if(i===0){
+        out += (c==='a'?'ا':c==='e'?'ا':c==='i'?'ای':c==='o'?'ا':'او');
+      } else if(c==='i'){
+        out += 'ی';
+      } else if(c==='u'){
+        out += 'و';
+      } else if(c==='a' && isLast){
+        out += 'ا';
+      }
+      i++; continue;
+    }
+    out += cons[c] || '';
+    i++;
+  }
+  return out || word;
+}
+function translit(raw){
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  return words.map(w=>{
+    if(!/[a-zA-Z]/.test(w)) return w;
+    const low = w.toLowerCase();
+    return nameDict[low] || phonetic(low);
+  }).join(' ');
+}
+
+const countEl = document.getElementById('repCount');
+function updateCount(){
+  const inputs = tbody.querySelectorAll('input[data-key]');
+  let n=0;
+  inputs.forEach(i=>{ if(i.value.trim()) n++; });
+  countEl.textContent = toFa(n);
+  countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump');
+}
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+const liveDot = document.getElementById('liveDot');
+const liveText = document.getElementById('liveText');
+const nameInputs = Array.from(tbody.querySelectorAll('input[data-key]'));
+
+function setOfflineMode(){
+  liveDot.classList.add('offline');
+  liveText.innerHTML = 'حالت آفلاین — اسم‌ها فقط برای همین مرورگر ذخیره می‌شن';
+  nameInputs.forEach(inp=>{
+    inp.disabled = false;
+    const key = 'bmagent-' + inp.dataset.key;
+    const saved = localStorage.getItem(key);
+    if(saved) inp.value = saved;
+    let t;
+    const save = ()=>{
+      const v = inp.value;
+      if(v && /[a-zA-Z]/.test(v)) inp.value = translit(v);
+      localStorage.setItem(key, inp.value);
+      updateCount();
+    };
+    inp.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(save,700); });
+    inp.addEventListener('blur', save);
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); inp.blur(); } });
+  });
+  updateCount();
+}
+
+async function initLiveNames(){
+  let fb;
+  try{ fb = await initFirebase(); }catch(e){ fb = null; }
+  if(!fb){ setOfflineMode(); return; }
+
+  const { db, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs } = fb;
+
+  liveDot.classList.remove('offline');
+  liveText.innerHTML = 'پنل زنده — اسم‌ها برای همه هم‌زمان نمایش داده می‌شن';
+
+  const writeTimers = {};
+  nameInputs.forEach(inp=>{
+    inp.disabled = false;
+    const key = inp.dataset.key;
+    inp.addEventListener('input', ()=>{
+      clearTimeout(writeTimers[key]);
+      writeTimers[key] = setTimeout(()=>saveName(key, inp), 700);
+    });
+    inp.addEventListener('blur', ()=>saveName(key, inp));
+    inp.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); saveName(key, inp); inp.blur(); }
+    });
+  });
+
+  onSnapshot(collection(db,'names'), snap=>{
+    snap.forEach(docSnap=>{
+      const inp = tbody.querySelector(`input[data-key="${docSnap.id}"]`);
+      if(!inp) return;
+      if(document.activeElement === inp) return; // don't fight a live typist
+      const data = docSnap.data() || {};
+      const val = data.value || '';
+      if(inp.value !== val){
+        inp.value = val;
+        inp.classList.remove('remote-update'); void inp.offsetWidth;
+        inp.classList.add('remote-update');
+      }
+    });
+    updateCount();
+  }, err=>{
+    showToast('اتصال زنده قطع شد، در حال تلاش دوباره…', true);
+  });
+
+  async function saveName(key, inp){
+    const v = inp.value;
+    const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
+    if(inp.value !== clean) inp.value = clean;
+    try{
+      await setDoc(doc(db,'names',key), { value: clean, date: todayStr() });
+    }catch(e){
+      showToast('ذخیره نشد، دوباره امتحان کن', true);
+    }
+  }
+
+  async function handleDailyReset(){
+    try{
+      const metaRef = doc(db,'meta','reset');
+      const snap = await getDoc(metaRef);
+      const today = todayStr();
+      const last = snap.exists() ? snap.data().date : null;
+      if(last !== today){
+        const namesSnap = await getDocs(collection(db,'names'));
+        await Promise.all(namesSnap.docs.map(d => deleteDoc(doc(db,'names',d.id))));
+        await setDoc(metaRef, { date: today });
+      }
+    }catch(e){ /* another tab may already be resetting — harmless */ }
+
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 5);
+    setTimeout(handleDailyReset, next - now);
+  }
+
+  handleDailyReset();
+}
+
+async function initFirebase(){
+  const [
+    { initializeApp },
+    {
+      getFirestore, doc, setDoc, getDoc, deleteDoc,
+      collection, onSnapshot, getDocs
+    }
+  ] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js')
+  ]);
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBI9iMtu2VAbzsigJWhk3yu10-dkVVsY8s",
+    authDomain: "bimeh-moallem.firebaseapp.com",
+    projectId: "bimeh-moallem",
+    storageBucket: "bimeh-moallem.firebasestorage.app",
+    messagingSenderId: "503703175301",
+    appId: "1:503703175301:web:6924b7d3f44e181397a9ec",
+    measurementId: "G-GBV9P4R926"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  return { db, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs };
+}
+
+initLiveNames();
+</script>
+</body>
+</html>
