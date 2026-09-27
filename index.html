@@ -112,6 +112,21 @@
 
   /* ---------- کارت شیشه‌ای ---------- */
   .stage{ width:100%; max-width:940px; }
+ .mascot{
+  position:fixed;
+  left:2vw;
+  bottom:0;
+  height:min(62vh, 560px);
+  width:auto;
+  pointer-events:none;
+  z-index:0;
+  opacity:.95;
+  filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));
+  animation: rise2 .8s cubic-bezier(.16,.84,.3,1) .1s backwards;
+}
+@media (max-width: 1300px){
+  .mascot{ display:none; } /* جا نیست، پس مخفی می‌شه */
+}
   .card{
     position:relative;
     background:
@@ -305,7 +320,7 @@
     <p>پنل دسترسی نمایندگان بیمه ثالث</p>
   </div>
 </header>
-
+<img src="mascot.png" alt="" class="mascot" aria-hidden="true">
 <div class="stage">
   <div class="card" id="card">
     <div class="status-line">
