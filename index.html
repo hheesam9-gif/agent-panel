@@ -269,6 +269,52 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .toast.warn{border-color:var(--error);color:#ffb7c0;}
+   .rules-btn{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;
+    background:var(--input-bg); border:1px solid var(--input-border); color:var(--text-dim);
+    border-radius:999px;padding:6px 13px;font-size:11.5px;font-family:inherit;
+    transition:border-color .2s,color .2s;
+  }
+  .rules-btn:hover{border-color:var(--accent1);color:var(--text);}
+  .rules-btn svg{width:13px;height:13px;flex:none;}
+
+  .rules-overlay{
+    position:fixed;inset:0;background:rgba(4,5,14,.72);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .rules-overlay.show{display:flex;}
+  .rules-modal{
+    width:100%;max-width:680px;max-height:82vh;overflow-y:auto;
+    background:var(--card-bg);border:1px solid var(--card-border);
+    backdrop-filter:blur(26px) saturate(140%);
+    border-radius:20px;box-shadow:var(--card-shadow);padding:22px 20px;
+    animation:cardIn .3s cubic-bezier(.16,.84,.3,1);
+  }
+  .rules-modal::-webkit-scrollbar{width:6px;}
+  .rules-modal::-webkit-scrollbar-thumb{background:var(--input-border);border-radius:99px;}
+  .rules-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;position:sticky;top:0;
+  }
+  .rules-head h2{margin:0;font-size:17px;font-weight:800;color:var(--text);}
+  .rules-close{
+    background:var(--input-bg);border:1px solid var(--input-border);color:var(--text-dim);
+    width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:color .2s,border-color .2s;
+  }
+  .rules-close:hover{color:var(--text);border-color:var(--accent1);}
+  .rule-section{
+    margin-bottom:14px;border:1px solid var(--row-border);border-radius:14px;
+    background:rgba(8,10,26,.35);padding:13px 14px;
+  }
+  .rule-section h3{
+    margin:0 0 8px;font-size:13.5px;font-weight:700;color:var(--accent2);
+  }
+  .rule-section ul{margin:0;padding-inline-start:18px;}
+  .rule-section li{
+    font-size:12.5px;line-height:1.9;color:var(--text-dim);margin-bottom:2px;
+  }
+  .rule-section li b{color:var(--text);font-weight:600;}
 
   @media (max-width:520px){ .status-line{flex-wrap:wrap;row-gap:8px;} }
 
@@ -328,6 +374,10 @@
         <svg class="off-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 9l5 5M22 9l-5 5"/></svg>
         <span id="soundLabel">صدای کپی: روشن</span>
       </button>
+           <button type="button" class="rules-btn" id="rulesBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg>
+        قوانین شرکت
+      </button>
     </div>
 
     <div class="ledger" id="tableWrap">
@@ -359,6 +409,88 @@
 </div>
 
 <div class="toast" id="toast"></div>
+ <div class="rules-overlay" id="rulesOverlay">
+  <div class="rules-modal">
+    <div class="rules-head">
+      <h2>📜 قوانین شرکت</h2>
+      <button type="button" class="rules-close" id="rulesClose">✕</button>
+    </div>
+
+    <div class="rule-section">
+      <h3>📄 قرارداد</h3>
+      <ul>
+        <li>فروش از کد شماره قرارداد <b>1314</b>، شماره بایگانی <b>6751</b> (کد داخلی قرارداد: 6751، شماره الحاقیه قرارداد: 19)</li>
+        <li>کارگزاری رسمی بیمه مستقیم برخط تجارت الکترونیک نوین نار، کد <b>9236</b></li>
+        <li>مدت قرارداد <b>30 روز</b></li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>👤 معرفی</h3>
+      <ul>
+        <li>تاریخ به‌صورت دستی اصلاح می‌شه</li>
+        <li>مالک و بیمه‌گذار می‌تونن متفاوت باشن</li>
+        <li>سواری: محدودیت سال ساخت خودروهای پراید، پیکان، ۴۰۵، ۲۰۶، پژو پارس و سمند تا ۲۰ سال، و سایر خودروهای سواری تا ۲۵ سال</li>
+        <li>بارکش: عدم امکان صدور بیمه شخص ثالث برای خودروهای بارکش و اتوکار با مازاد مالی بیشتر از سطح تعهد مالی پایه (۷۰ میلیون تومان) / محدودیت سال ساخت برای بارکش تا ۱۰ سال و اتوکار تا ۵ سال</li>
+        <li>موتورسیکلت: محدودیت سال ساخت تا ۳ سال</li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>🔄 شرایط انتقال</h3>
+      <ul>
+        <li>کارت خودرو یا برگ سبز + تاریخچه پلاک</li>
+        <li>انتقال بین اعضای درجه یک: باید مدارک نسبیت دریافت بشه</li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>📋 نوع تسویه</h3>
+      <ul>
+        <li>عملیات دریافت &gt; سند دریافتی &gt; صندوق &gt; کد <b>3087</b></li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>👤 شخص</h3>
+      <ul>
+        <li>حقوقی: امکان صدور نیست</li>
+        <li>اتباع: امکان صدور ندارد</li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>🚗 نوع کاربری</h3>
+      <ul>
+        <li>مورد استفاده تاکسی: فقط کاربری شخصی صادر می‌کنیم</li>
+        <li>دولتی پلاک (الف): امکان صدور هست</li>
+        <li>مزایده‌ای: امکان صدور نیست</li>
+        <li>منطقه آزاد: صادر نمی‌کنیم</li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>💰 تعداد خسارت قابل صدور</h3>
+      <ul>
+        <li>خسارت‌دار صادر نمی‌کند</li>
+      </ul>
+    </div>
+
+    <div class="rule-section">
+      <h3>🚨 نکات مهم</h3>
+      <ul>
+        <li>معرف خودکار می‌شینه: کارگزاری رسمی بیمه مستقیم برخط تجارت الکترونیک نوین نار، کد ۹۲۳۶</li>
+        <li>سفارشات مجوزی: مدارک و کارت خودرو توی فناوران آپلود و بعد مجوزی می‌شن</li>
+        <li>برای صفر کردن تخفیفات باید مجوز بگیریم</li>
+        <li>فقط کاربری شخصی و یک‌ساله صادر می‌کنیم</li>
+        <li>محدودیت سال ساخت سواری که تا ۳۰ سال بود برداشته شد</li>
+        <li>بارکش از ۱ تن تا بالای ۲۰ تن، تا سال ساخت ۱۵ سال فعال گردید</li>
+        <li>مازاد مالی ۱۰۰-۱۵۰-۲۰۰-۲۵۰-۳۰۰-۳۵۰-۴۰۰-۴۵۰ و ۵۰۰ برای بارکش آپدیت و فعال شد</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
 
 <script>
 const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -447,6 +579,15 @@ soundToggle.addEventListener('click', ()=>{
   renderSoundState();
   if(soundOn){ ensureCtx(); playClickSound(); }
 });
+ const rulesBtn = document.getElementById('rulesBtn');
+const rulesOverlay = document.getElementById('rulesOverlay');
+const rulesClose = document.getElementById('rulesClose');
+function openRules(){ rulesOverlay.classList.add('show'); }
+function closeRules(){ rulesOverlay.classList.remove('show'); }
+rulesBtn.addEventListener('click', openRules);
+rulesClose.addEventListener('click', closeRules);
+rulesOverlay.addEventListener('click', e=>{ if(e.target === rulesOverlay) closeRules(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRules(); });
 
 const tbody = document.getElementById('tbody');
 tbody.innerHTML = accounts.map((a) => `
