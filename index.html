@@ -84,6 +84,10 @@
     color:var(--gold-light);font-weight:800;font-size:16px;
     filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));
     animation:emblem-in .8s cubic-bezier(.2,.8,.2,1) both;
+    overflow:hidden;
+  }
+  .emblem .mark img{
+    width:100%;height:100%;object-fit:contain;border-radius:50%;
   }
   @keyframes emblem-in{from{opacity:0;transform:scale(.8) translateY(6px);}to{opacity:1;transform:none;}}
 
@@ -281,7 +285,7 @@
 <header class="topbar">
   <div class="emblem">
     <span class="ring"></span><span class="ring r2"></span>
-    <span class="mark">بم</span>
+    <span class="mark"><img src="logo.png" alt="بیمه معلم"></span>
   </div>
   <div class="brand">
     <h1>بیمه معلم</h1>
@@ -598,54 +602,100 @@ function setOfflineMode(){
   updateCount();
 }
 
-async function initLiveNames(){
-  let fb;
-  try{ fb = await initFirebase(); }catch(e){ fb = null; }
-  if(!fb){ setOfflineMode(); return; }
+// ---- Supabase realtime backend ----
+const SUPABASE_URL = "https://rfkvlmktvrlaovjgzirz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJma3ZsbWt0dnJsYW92amd6aXJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MDU4MTgsImV4cCI6MjEwNjA4MTgxOH0.jy_GLsMMG6_xIviwjmr25Kl3VNz5YcVl7XV0roeDDgA";
+const RESET_MARKER_KEY = '__reset__';
 
-  const { db, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs } = fb;
+async function initSupabase(){
+  try{
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return { supabase };
+  }catch(e){
+    return null;
+  }
+}
+
+async function initLiveNames(){
+  const sb = await initSupabase();
+  if(!sb){ setOfflineMode(); return; }
+  const { supabase } = sb;
 
   liveDot.classList.remove('offline');
   liveText.innerHTML = 'پنل زنده — اسم‌ها برای همه هم‌زمان نمایش داده می‌شن';
 
   const writeTimers = {};
+  const dirty = {};
   nameInputs.forEach(inp=>{
     inp.disabled = false;
     const key = inp.dataset.key;
     inp.addEventListener('input', ()=>{
+      dirty[key] = true; // only mark for saving when the user actually types
       clearTimeout(writeTimers[key]);
-      writeTimers[key] = setTimeout(()=>saveName(key, inp), 700);
+      writeTimers[key] = setTimeout(()=>{ saveName(key, inp); dirty[key] = false; }, 700);
     });
-    inp.addEventListener('blur', ()=>saveName(key, inp));
+    inp.addEventListener('blur', ()=>{
+      if(!dirty[key]) return; // focused and left without typing anything — don't overwrite
+      clearTimeout(writeTimers[key]);
+      saveName(key, inp);
+      dirty[key] = false;
+    });
     inp.addEventListener('keydown', e=>{
-      if(e.key==='Enter'){ e.preventDefault(); saveName(key, inp); inp.blur(); }
+      if(e.key==='Enter' && dirty[key]){
+        e.preventDefault();
+        clearTimeout(writeTimers[key]);
+        saveName(key, inp);
+        dirty[key] = false;
+        inp.blur();
+      }
     });
   });
 
-  onSnapshot(collection(db,'names'), snap=>{
-    snap.forEach(docSnap=>{
-      const inp = tbody.querySelector(`input[data-key="${docSnap.id}"]`);
+  async function loadInitial(){
+    const { data, error } = await supabase.from('names').select('key,value');
+    if(error){ showToast('خطا در بارگذاری اطلاعات', true); return; }
+    (data || []).forEach(row=>{
+      if(row.key === RESET_MARKER_KEY) return;
+      const inp = tbody.querySelector(`input[data-key="${row.key}"]`);
+      if(inp) inp.value = row.value || '';
+    });
+    updateCount();
+  }
+  await loadInitial();
+
+  supabase
+    .channel('names-realtime')
+    .on('postgres_changes', { event:'*', schema:'public', table:'names' }, payload => {
+      const row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+      if(!row || !row.key || row.key === RESET_MARKER_KEY) return;
+      const inp = tbody.querySelector(`input[data-key="${row.key}"]`);
       if(!inp) return;
       if(document.activeElement === inp) return; // don't fight a live typist
-      const data = docSnap.data() || {};
-      const val = data.value || '';
+      const val = payload.eventType === 'DELETE' ? '' : (row.value || '');
       if(inp.value !== val){
         inp.value = val;
         inp.classList.remove('remote-update'); void inp.offsetWidth;
         inp.classList.add('remote-update');
       }
+      updateCount();
+    })
+    .subscribe(status=>{
+      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
+        showToast('اتصال زنده قطع شد، در حال تلاش دوباره…', true);
+      }
     });
-    updateCount();
-  }, err=>{
-    showToast('اتصال زنده قطع شد، در حال تلاش دوباره…', true);
-  });
 
   async function saveName(key, inp){
     const v = inp.value;
     const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
     if(inp.value !== clean) inp.value = clean;
     try{
-      await setDoc(doc(db,'names',key), { value: clean, date: todayStr() });
+      if(clean.trim() === ''){
+        await supabase.from('names').delete().eq('key', key);
+      }else{
+        await supabase.from('names').upsert({ key, value: clean, date: todayStr() });
+      }
     }catch(e){
       showToast('ذخیره نشد، دوباره امتحان کن', true);
     }
@@ -653,14 +703,12 @@ async function initLiveNames(){
 
   async function handleDailyReset(){
     try{
-      const metaRef = doc(db,'meta','reset');
-      const snap = await getDoc(metaRef);
       const today = todayStr();
-      const last = snap.exists() ? snap.data().date : null;
+      const { data } = await supabase.from('names').select('value').eq('key', RESET_MARKER_KEY).maybeSingle();
+      const last = data ? data.value : null;
       if(last !== today){
-        const namesSnap = await getDocs(collection(db,'names'));
-        await Promise.all(namesSnap.docs.map(d => deleteDoc(doc(db,'names',d.id))));
-        await setDoc(metaRef, { date: today });
+        await supabase.from('names').delete().neq('key', RESET_MARKER_KEY);
+        await supabase.from('names').upsert({ key: RESET_MARKER_KEY, value: today, date: today });
       }
     }catch(e){ /* another tab may already be resetting — harmless */ }
 
@@ -670,33 +718,6 @@ async function initLiveNames(){
   }
 
   handleDailyReset();
-}
-
-async function initFirebase(){
-  const [
-    { initializeApp },
-    {
-      getFirestore, doc, setDoc, getDoc, deleteDoc,
-      collection, onSnapshot, getDocs
-    }
-  ] = await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js')
-  ]);
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBI9iMtu2VAbzsigJWhk3yu10-dkVVsY8s",
-    authDomain: "bimeh-moallem.firebaseapp.com",
-    projectId: "bimeh-moallem",
-    storageBucket: "bimeh-moallem.firebasestorage.app",
-    messagingSenderId: "503703175301",
-    appId: "1:503703175301:web:6924b7d3f44e181397a9ec",
-    measurementId: "G-GBV9P4R926"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  return { db, doc, setDoc, getDoc, deleteDoc, collection, onSnapshot, getDocs };
 }
 
 initLiveNames();
