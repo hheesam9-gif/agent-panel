@@ -335,7 +335,18 @@
   .rules-noresult{
     display:none; text-align:center; color:var(--text-faint); font-size:12.5px; padding:20px 0;
   }
-
+.tip{
+  position:fixed; z-index:60; pointer-events:none;
+  background:var(--card-bg); border:1px solid var(--accent1);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-radius:12px; padding:9px 14px; font-size:12px; line-height:1.9;
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+  opacity:0; transform:translateY(4px); transition:opacity .15s, transform .15s;
+}
+.tip.show{opacity:1; transform:none;}
+.tip span{color:var(--text-dim);}
+.tip b{color:var(--text); font-weight:600;}
+.tip .tip-time{color:var(--accent2); font-variant-numeric:tabular-nums;}
   @media (max-width:520px){ .status-line{flex-wrap:wrap;row-gap:8px;} }
 
   @media (max-width:680px){
@@ -427,7 +438,7 @@
   <footer>بیمه معلم — پنل داخلی نمایندگان</footer>
   <div class="mini-credit">azki sword</div>
 </div>
-
+<div class="tip" id="tip"></div>
 <div class="toast" id="toast"></div>
  <div class="rules-overlay" id="rulesOverlay">
   <div class="rules-modal">
@@ -789,6 +800,55 @@ function todayStr(){
 const liveDot = document.getElementById('liveDot');
 const liveText = document.getElementById('liveText');
 const nameInputs = Array.from(tbody.querySelectorAll('input[data-key]'));
+/* ---------- زمان ثبت نام ---------- */
+const tsMap = {};   // key -> timestamp (ms)
+
+function fmtTs(ts){
+  const d = new Date(Number(ts));
+  const p = {};
+  new Intl.DateTimeFormat('fa-IR-u-ca-persian-nu-latn', {
+    timeZone:'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+  }).formatToParts(d).forEach(x=>{ p[x.type] = x.value; });
+  return {
+    date: toFa(`${p.year}/${p.month}/${p.day}`),
+    time: toFa(`${p.hour}:${p.minute}`)
+  };
+}
+
+const tipEl = document.getElementById('tip');
+let tipTimer;
+function hideTip(){ tipEl.classList.remove('show'); }
+function showTip(inp){
+  const name = inp.value.trim();
+  const ts = tsMap[inp.dataset.key];
+  if(!name || !ts){ hideTip(); return; }
+  const f = fmtTs(ts);
+  tipEl.innerHTML =
+    `<div><span>نام:</span> <b></b></div>` +
+    `<div><span>تاریخ ثبت:</span> <b>${f.date}</b></div>` +
+    `<div><span>ساعت ثبت:</span> <b class="tip-time">${f.time}</b></div>`;
+  tipEl.querySelector('b').textContent = name;   // امن در برابر HTML
+  const r = inp.getBoundingClientRect();
+  tipEl.classList.add('show');
+  const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  let left = r.left + r.width/2 - w/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+  let top = r.bottom + 8;
+  if(top + h > window.innerHeight - 8) top = r.top - h - 8;
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+}
+nameInputs.forEach(inp=>{
+  const cell = inp.closest('td');
+  cell.addEventListener('pointerenter', e=>{
+    showTip(inp);
+    if(e.pointerType === 'touch'){ clearTimeout(tipTimer); tipTimer = setTimeout(hideTip, 2500); }
+  });
+  cell.addEventListener('pointerleave', hideTip);
+  inp.addEventListener('input', hideTip);
+});
+window.addEventListener('scroll', hideTip, true);
 
 function setOfflineMode(){
   liveDot.classList.add('offline');
@@ -798,13 +858,23 @@ function setOfflineMode(){
     const key = 'bmagent-' + inp.dataset.key;
     const saved = localStorage.getItem(key);
     if(saved) inp.value = saved;
+    const tsSaved = localStorage.getItem('bmts-' + inp.dataset.key);
+    if(saved && tsSaved) tsMap[inp.dataset.key] = Number(tsSaved);
     let t;
-    const save = ()=>{
-      const v = inp.value;
-      if(v && /[a-zA-Z]/.test(v)) inp.value = translit(v);
-      localStorage.setItem(key, inp.value);
-      updateCount();
-    };
+const save = ()=>{
+  const v = inp.value;
+  if(v && /[a-zA-Z]/.test(v)) inp.value = translit(v);
+  localStorage.setItem(key, inp.value);
+  const k = inp.dataset.key;
+  if(!inp.value.trim()){
+    delete tsMap[k];
+    localStorage.removeItem('bmts-' + k);
+  }else if(!tsMap[k]){
+    tsMap[k] = Date.now();
+    localStorage.setItem('bmts-' + k, tsMap[k]);
+  }
+  updateCount();
+};
     inp.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(save,700); });
     inp.addEventListener('blur', save);
     inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); inp.blur(); } });
@@ -862,16 +932,18 @@ async function initLiveNames(){
     });
   });
 
-  async function loadInitial(){
-    const { data, error } = await supabase.from('names').select('key,value');
-    if(error){ showToast('خطا در بارگذاری اطلاعات', true); return; }
-    (data || []).forEach(row=>{
-      if(row.key === RESET_MARKER_KEY) return;
-      const inp = tbody.querySelector(`input[data-key="${row.key}"]`);
-      if(inp) inp.value = row.value || '';
-    });
-    updateCount();
-  }
+async function loadInitial(){
+  let res = await supabase.from('names').select('key,value,ts');
+  if(res.error){ res = await supabase.from('names').select('key,value'); }  // اگه ستون ts نبود
+  if(res.error){ showToast('خطا در بارگذاری اطلاعات', true); return; }
+  (res.data || []).forEach(row=>{
+    if(row.key === RESET_MARKER_KEY) return;
+    const inp = tbody.querySelector(`input[data-key="${row.key}"]`);
+    if(inp) inp.value = row.value || '';
+    if(row.ts && row.value) tsMap[row.key] = Number(row.ts);
+  });
+  updateCount();
+}
   await loadInitial();
 
   supabase
@@ -881,6 +953,11 @@ async function initLiveNames(){
       if(!row || !row.key || row.key === RESET_MARKER_KEY) return;
       const inp = tbody.querySelector(`input[data-key="${row.key}"]`);
       if(!inp) return;
+     if(payload.eventType === 'DELETE' || !row.value){
+  delete tsMap[row.key];
+}else if(row.ts){
+  tsMap[row.key] = Number(row.ts);
+}
       if(document.activeElement === inp) return;
       const val = payload.eventType === 'DELETE' ? '' : (row.value || '');
       if(inp.value !== val){
@@ -896,20 +973,28 @@ async function initLiveNames(){
       }
     });
 
-  async function saveName(key, inp){
-    const v = inp.value;
-    const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
-    if(inp.value !== clean) inp.value = clean;
-    try{
-      if(clean.trim() === ''){
-        await supabase.from('names').delete().eq('key', key);
-      }else{
-        await supabase.from('names').upsert({ key, value: clean, date: todayStr() });
+async function saveName(key, inp){
+  const v = inp.value;
+  const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
+  if(inp.value !== clean) inp.value = clean;
+  try{
+    if(clean.trim() === ''){
+      delete tsMap[key];                       // اسم پاک شد ← زمان هم پاک می‌شه
+      await supabase.from('names').delete().eq('key', key);
+    }else{
+      if(!tsMap[key]) tsMap[key] = Date.now(); // اسم جدید ← زمان جدید
+      const row = { key, value: clean, date: todayStr(), ts: tsMap[key] };
+      let { error } = await supabase.from('names').upsert(row);
+      if(error && /ts/i.test(error.message || '')){   // ستون ts هنوز ساخته نشده
+        delete row.ts;
+        ({ error } = await supabase.from('names').upsert(row));
       }
-    }catch(e){
-      showToast('ذخیره نشد، دوباره امتحان کن', true);
+      if(error) throw error;
     }
+  }catch(e){
+    showToast('ذخیره نشد، دوباره امتحان کن', true);
   }
+}
 
   async function handleDailyReset(){
     try{
