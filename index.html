@@ -435,7 +435,7 @@
     </div>
   </div>
 
-  <p class="reset-note">روی نام کاربری یا رمز کلیک کن تا کپی بشه. نام نماینده رو انگلیسی بنویس، خودکار فارسی میشه. اسم‌ها برای همه‌ی افرادی که این صفحه رو باز کردن <b>هم‌زمان</b> نمایش داده می‌شن. هر شب ساعت <b>۰۰:۰۰</b> نام‌ها پاک می‌شن.</p>
+<p class="reset-note">روی نام کاربری یا رمز کلیک کن تا کپی بشه. نام نماینده رو انگلیسی بنویس، خودکار فارسی میشه. اسم‌ها برای همه‌ی افرادی که این صفحه رو باز کردن <b>هم‌زمان</b> نمایش داده می‌شن. هر شب ساعت <b>۰۰:۰۰</b> و هر روز ساعت <b>۱۶:۰۰</b> نام‌ها پاک می‌شن.</p>
   <footer>بیمه معلم — پنل داخلی نمایندگان</footer>
   <div class="mini-credit">azki sword</div>
 </div>
@@ -997,23 +997,42 @@ async function saveName(key, inp){
   }
 }
 
-  async function handleDailyReset(){
-    try{
-      const today = todayStr();
-      const { data } = await supabase.from('names').select('value').eq('key', RESET_MARKER_KEY).maybeSingle();
-      const last = data ? data.value : null;
-      if(last !== today){
-        await supabase.from('names').delete().neq('key', RESET_MARKER_KEY);
-        await supabase.from('names').upsert({ key: RESET_MARKER_KEY, value: today, date: today });
-      }
-    }catch(e){ /* another tab may already be resetting — harmless */ }
-
-    const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 5);
-    setTimeout(handleDailyReset, next - now);
+  // کلید دوره‌ی فعلی بر اساس ساعت تهران: روز + قبل/بعد از ۱۶
+  function resetPeriodKey(){
+    const p = {};
+    new Intl.DateTimeFormat('en-US', {
+      timeZone:'Asia/Tehran', year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', hourCycle:'h23'
+    }).formatToParts(new Date()).forEach(x=>{ p[x.type] = x.value; });
+    return `${p.year}-${p.month}-${p.day}-${Number(p.hour) >= 16 ? 'pm' : 'am'}`;
   }
 
-}
+  // میلی‌ثانیه تا ریست بعدی (۰۰:۰۰ یا ۱۶:۰۰ به وقت تهران)
+  function msUntilNextReset(){
+    const p = {};
+    new Intl.DateTimeFormat('en-US', {
+      timeZone:'Asia/Tehran', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
+    }).formatToParts(new Date()).forEach(x=>{ p[x.type] = x.value; });
+    const sec = Number(p.hour)*3600 + Number(p.minute)*60 + Number(p.second);
+    const target = sec < 16*3600 ? 16*3600 : 86400;
+    return (target - sec) * 1000 + 5000;
+  }
+
+  async function handleDailyReset(){
+    try{
+      const period = resetPeriodKey();
+      const { data } = await supabase.from('names').select('value').eq('key', RESET_MARKER_KEY).maybeSingle();
+      const last = data ? data.value : null;
+      if(last !== period){
+        await supabase.from('names').delete().neq('key', RESET_MARKER_KEY);
+        await supabase.from('names').upsert({ key: RESET_MARKER_KEY, value: period, date: todayStr() });
+      }
+    }catch(e){ /* ممکنه تب دیگه‌ای همزمان ریست کرده باشه */ }
+
+    setTimeout(handleDailyReset, msUntilNextReset());
+  }
+
+  handleDailyReset();
 
 initLiveNames();
 </script>
