@@ -377,6 +377,11 @@
     td.credential::before{transition:none;}
     td.credential .stamp-ok{animation:none;}
   }
+  tbody tr{ transition: background .35s, box-shadow .35s; }
+tbody tr.full{ background: linear-gradient(90deg, rgba(47,211,167,.12), transparent); box-shadow: inset -3px 0 0 var(--mint); }
+tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transparent); box-shadow: inset -3px 0 0 #ffb84d; }
+.cap{ height:4px; margin:0 6px 8px; border-radius:99px; background:var(--row-border); overflow:hidden; position:relative; z-index:2; }
+.cap-bar{ height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--accent1),var(--mint)); transition:width .6s cubic-bezier(.16,.84,.3,1); }
 </style>
 </head>
 <body>
@@ -401,6 +406,8 @@
   <div class="card" id="card">
     <div class="status-line">
       <span class="pill"><span class="dot" id="liveDot"></span><span id="liveText">هم‌اکنون <b id="liveCount">۰</b> حساب کاربری فعال</span></span>
+      <span class="pill">⏳ پاک‌سازی بعدی: <b id="resetCountdown">--:--:--</b></span>
+      <span class="pill">👥 آنلاین: <b id="onlineCount">۱</b></span>
       <button type="button" class="sound-toggle" id="soundToggle" data-on="true" aria-pressed="true">
         <svg class="waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
         <svg class="off-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 9l5 5M22 9l-5 5"/></svg>
@@ -411,7 +418,7 @@
         قوانین شرکت
       </button>
     </div>
-
+    <div class="cap"><div class="cap-bar" id="capBar"></div></div>
     <div class="ledger" id="tableWrap">
       <div class="ledger-scroll">
         <table>
@@ -788,10 +795,18 @@ function translit(raw){
 const countEl = document.getElementById('repCount');
 function updateCount(){
   const inputs = tbody.querySelectorAll('input[data-key]');
-  let n=0;
-  inputs.forEach(i=>{ if(i.value.trim()) n++; });
+  let n = 0;
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const filled = [...tr.querySelectorAll('input[data-key]')].filter(i=>i.value.trim()).length;
+    tr.classList.toggle('full', filled === 2);
+    tr.classList.toggle('half', filled === 1);
+    n += filled;
+  });
   countEl.textContent = toFa(n);
+  const bar = document.getElementById('capBar');
+  if(bar) bar.style.width = (n / inputs.length * 100) + '%';
 }
+tbody.addEventListener('input', ()=> setTimeout(updateCount, 0));
 
 function todayStr(){
   const d = new Date();
@@ -965,6 +980,7 @@ async function loadInitial(){
         inp.value = val;
         inp.classList.remove('remote-update'); void inp.offsetWidth;
         inp.classList.add('remote-update');
+        playClickSound();
       }
       updateCount();
     })
@@ -973,7 +989,13 @@ async function loadInitial(){
         showToast('اتصال زنده قطع شد، در حال تلاش دوباره…', true);
       }
     });
-
+  const presence = supabase.channel('presence-room', { config:{ presence:{ key: Math.random().toString(36).slice(2) } } });
+  presence.on('presence', { event:'sync' }, ()=>{
+    const n = Object.keys(presence.presenceState()).length;
+    document.getElementById('onlineCount').textContent = toFa(n);
+  }).subscribe(async status=>{
+    if(status === 'SUBSCRIBED') await presence.track({ at: Date.now() });
+  });
 async function saveName(key, inp){
   const v = inp.value;
   const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
@@ -1035,6 +1057,69 @@ async function saveName(key, inp){
   handleDailyReset();
 } 
 initLiveNames();
+(function(){
+  const el = document.getElementById('resetCountdown');
+  function tehranSec(){
+    const p = {};
+    new Intl.DateTimeFormat('en-US', {
+      timeZone:'Asia/Tehran', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
+    }).formatToParts(new Date()).forEach(x=>{ p[x.type] = x.value; });
+    return +p.hour*3600 + +p.minute*60 + +p.second;
+  }
+  function tick(){
+    const s = tehranSec();
+    const left = (s < 16*3600 ? 16*3600 : 86400) - s;
+    const h = Math.floor(left/3600), m = Math.floor(left%3600/60), sc = left%60;
+    el.textContent = toFa([h,m,sc].map(n=>String(n).padStart(2,'0')).join(':'));
+  }
+  tick(); setInterval(tick, 1000);
+})();
+(function(){
+  if (REDUCE_MOTION || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const card = document.getElementById('card');
+  const stage = card.parentElement;
+  stage.style.perspective = '1200px';
+  card.style.transition = 'transform .15s ease-out';
+  stage.addEventListener('pointermove', e=>{
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - .5;
+    const y = (e.clientY - r.top) / r.height - .5;
+    card.style.transform = `rotateY(${x * -4}deg) rotateX(${y * 4}deg)`;
+  });
+  stage.addEventListener('pointerleave', ()=>{ card.style.transform = ''; });
+})();
+(function(){
+  const colors = ['#6d5bff','#4f7bff','#2fd3a7','#ffd166','#ff6b7d'];
+  function burst(x, y){
+    for(let i = 0; i < 22; i++){
+      const p = document.createElement('i');
+      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+      p.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:6px;height:6px;border-radius:2px;background:${colors[i % 5]};pointer-events:none;z-index:200;transition:transform .8s cubic-bezier(.2,.8,.3,1),opacity .8s;`;
+      document.body.appendChild(p);
+      requestAnimationFrame(()=>{
+        p.style.transform = `translate(${Math.cos(a) * d}px,${Math.sin(a) * d + 30}px) rotate(${Math.random() * 540}deg)`;
+        p.style.opacity = 0;
+      });
+      setTimeout(()=>p.remove(), 900);
+    }
+  }
+  const tb = document.getElementById('tbody');
+  const filledCount = tr => [...tr.querySelectorAll('input[data-key]')].filter(i=>i.value.trim()).length;
+  tb.addEventListener('focusin', e=>{
+    const tr = e.target.closest('tr'); if(!tr) return;
+    tr.dataset.wasFull = filledCount(tr) === 2 ? '1' : '';
+  });
+  tb.addEventListener('focusout', e=>{
+    const tr = e.target.closest('tr'); if(!tr) return;
+    setTimeout(()=>{
+      if(!tr.dataset.wasFull && filledCount(tr) === 2){
+        const r = tr.getBoundingClientRect();
+        burst(r.left + r.width / 2, r.top + r.height / 2);
+      }
+    }, 900);
+  });
+})();
+
 </script>
 <script src="panel-fx.js"></script>
 </body>
