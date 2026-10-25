@@ -377,40 +377,6 @@
     td.credential::before{transition:none;}
     td.credential .stamp-ok{animation:none;}
   }
-  tbody tr{ transition: background .35s, box-shadow .35s; }
-tbody tr.full{ background: linear-gradient(90deg, rgba(47,211,167,.12), transparent); box-shadow: inset -3px 0 0 var(--mint); }
-tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transparent); box-shadow: inset -3px 0 0 #ffb84d; }
-.cap{ height:4px; margin:0 6px 8px; border-radius:99px; background:var(--row-border); overflow:hidden; position:relative; z-index:2; }
-.cap-bar{ height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--accent1),var(--mint)); transition:width .6s cubic-bezier(.16,.84,.3,1); }
-.pill-ic{ width:13px; height:13px; flex:none; color:var(--accent2); }
-.spin-slow{ animation: spinSlow 12s linear infinite; }
-@keyframes spinSlow{ to{ transform: rotate(360deg); } }
-
-.rule-section h3{ display:flex; align-items:center; gap:9px; }
-.rule-section h3::before{
-  content:""; width:4px; height:15px; border-radius:99px; flex:none;
-  background:linear-gradient(180deg,var(--accent1),var(--mint));
-}
-.rule-section{ transition: border-color .25s, transform .25s; }
-.rule-section:hover{ border-color: color-mix(in srgb, var(--accent1) 55%, transparent); transform: translateX(-3px); }
-
-.pill{ position:relative; overflow:hidden; }
-.pill::after{
-  content:""; position:absolute; top:0; bottom:0; width:40%; left:-60%;
-  background:linear-gradient(105deg,transparent,rgba(255,255,255,.12),transparent);
-  transform:skewX(-20deg); transition:left .6s ease; pointer-events:none;
-}
-.pill:hover::after{ left:130%; }
-.rules-overlay.show .rule-section{ animation: ruleIn .5s cubic-bezier(.16,.84,.3,1) backwards; }
-.rules-overlay.show .rule-section:nth-of-type(1){ animation-delay:.05s; }
-.rules-overlay.show .rule-section:nth-of-type(2){ animation-delay:.10s; }
-.rules-overlay.show .rule-section:nth-of-type(3){ animation-delay:.15s; }
-.rules-overlay.show .rule-section:nth-of-type(4){ animation-delay:.20s; }
-.rules-overlay.show .rule-section:nth-of-type(5){ animation-delay:.25s; }
-.rules-overlay.show .rule-section:nth-of-type(6){ animation-delay:.30s; }
-.rules-overlay.show .rule-section:nth-of-type(7){ animation-delay:.35s; }
-.rules-overlay.show .rule-section:nth-of-type(8){ animation-delay:.40s; }
-@keyframes ruleIn{ from{ opacity:0; transform:translateY(14px); } }
 </style>
 </head>
 <body>
@@ -435,8 +401,6 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
   <div class="card" id="card">
     <div class="status-line">
       <span class="pill"><span class="dot" id="liveDot"></span><span id="liveText">هم‌اکنون <b id="liveCount">۰</b> حساب کاربری فعال</span></span>
-      <span class="pill"><svg class="pill-ic spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>پاک‌سازی بعدی: <b id="resetCountdown">--:--:--</b></span>
-      <span class="pill"><svg class="pill-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M18 14.4c1.8.8 3 2.6 3 5.6"/></svg>آنلاین: <b id="onlineCount">۱</b></span>
       <button type="button" class="sound-toggle" id="soundToggle" data-on="true" aria-pressed="true">
         <svg class="waves" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
         <svg class="off-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M17 9l5 5M22 9l-5 5"/></svg>
@@ -447,7 +411,7 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
         قوانین شرکت
       </button>
     </div>
-    <div class="cap"><div class="cap-bar" id="capBar"></div></div>
+
     <div class="ledger" id="tableWrap">
       <div class="ledger-scroll">
         <table>
@@ -480,15 +444,15 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
  <div class="rules-overlay" id="rulesOverlay">
   <div class="rules-modal">
     <div class="rules-head">
-      <h2>قوانین شرکت</h2>
+      <h2>📜 قوانین شرکت</h2>
       <button type="button" class="rules-close" id="rulesClose">✕</button>
     </div>
     <div class="rules-search-wrap">
-      <input type="text" id="rulesSearch" class="rules-search" placeholder=" جستجو در قوانین... (مثلاً بارکش، موتورسیکلت، تسویه)">
+      <input type="text" id="rulesSearch" class="rules-search" placeholder="🔍 جستجو در قوانین... (مثلاً بارکش، موتورسیکلت، تسویه)">
     </div>
-    <div class="rules-noresult" id="rulesNoResult">چیزی پیدا نشد </div>
+    <div class="rules-noresult" id="rulesNoResult">چیزی پیدا نشد 🤷‍♂️</div>
     <div class="rule-section">
-      <h3>قرارداد</h3>
+      <h3>📄 قرارداد</h3>
       <ul>
         <li>فروش از کد شماره قرارداد <b>1314</b>، شماره بایگانی <b>6751</b> (کد داخلی قرارداد: 6751، شماره الحاقیه قرارداد: 19)</li>
         <li>کارگزاری رسمی بیمه مستقیم برخط تجارت الکترونیک نوین نار، کد <b>9236</b></li>
@@ -497,7 +461,7 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
     </div>
 
     <div class="rule-section">
-      <h3> معرفی</h3>
+      <h3>👤 معرفی</h3>
       <ul>
         <li>تاریخ به‌صورت دستی اصلاح می‌شه</li>
         <li>مالک و بیمه‌گذار می‌تونن متفاوت باشن</li>
@@ -508,7 +472,7 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
     </div>
 
     <div class="rule-section">
-      <h3>شرایط انتقال</h3>
+      <h3>🔄 شرایط انتقال</h3>
       <ul>
         <li>کارت خودرو یا برگ سبز + تاریخچه پلاک</li>
         <li>انتقال بین اعضای درجه یک: باید مدارک نسبیت دریافت بشه</li>
@@ -516,14 +480,14 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
     </div>
 
     <div class="rule-section">
-      <h3>نوع تسویه</h3>
+      <h3>📋 نوع تسویه</h3>
       <ul>
         <li>عملیات دریافت &gt; سند دریافتی &gt; صندوق &gt; کد <b>3087</b></li>
       </ul>
     </div>
 
     <div class="rule-section">
-      <h3>شخص</h3>
+      <h3>👤 شخص</h3>
       <ul>
         <li>حقوقی: امکان صدور نیست</li>
         <li>اتباع: امکان صدور ندارد</li>
@@ -531,7 +495,7 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
     </div>
 
     <div class="rule-section">
-      <h3>نوع کاربری</h3>
+      <h3>🚗 نوع کاربری</h3>
       <ul>
         <li>مورد استفاده تاکسی: فقط کاربری شخصی صادر می‌کنیم</li>
         <li>دولتی پلاک (الف): امکان صدور هست</li>
@@ -541,14 +505,14 @@ tbody tr.half{ background: linear-gradient(90deg, rgba(255,184,77,.09), transpar
     </div>
 
     <div class="rule-section">
-      <h3>تعداد خسارت قابل صدور</h3>
+      <h3>💰 تعداد خسارت قابل صدور</h3>
       <ul>
         <li>خسارت‌دار صادر نمی‌کند</li>
       </ul>
     </div>
      
     <div class="rule-section">
-      <h3>نکات مهم</h3>
+      <h3>🚨 نکات مهم</h3>
       <ul>
         <li>در شرکت معلم درصد نهایی <b>۵</b> به مشتری تعلق می‌گیرد و افزایش پیدا می‌کند</li>
         <li>معرف خودکار می‌شینه: کارگزاری رسمی بیمه مستقیم برخط تجارت الکترونیک نوین نار، کد ۹۲۳۶</li>
@@ -824,26 +788,10 @@ function translit(raw){
 const countEl = document.getElementById('repCount');
 function updateCount(){
   const inputs = tbody.querySelectorAll('input[data-key]');
-  let n = 0;
-  tbody.querySelectorAll('tr').forEach(tr=>{
-    const filled = [...tr.querySelectorAll('input[data-key]')].filter(i=>i.value.trim()).length;
-    tr.classList.toggle('full', filled === 2);
-    tr.classList.toggle('half', filled === 1);
-    n += filled;
-  });
-  (function(){
-    const from = parseInt(String(countEl.dataset.v || 0), 10), to = n, t0 = performance.now();
-    countEl.dataset.v = to;
-    (function step(t){
-      const k = Math.min(1, (t - t0) / 450);
-      countEl.textContent = toFa(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
-      if(k < 1) requestAnimationFrame(step);
-    })(t0);
-  })();
-  const bar = document.getElementById('capBar');
-  if(bar) bar.style.width = (n / inputs.length * 100) + '%';
+  let n=0;
+  inputs.forEach(i=>{ if(i.value.trim()) n++; });
+  countEl.textContent = toFa(n);
 }
-tbody.addEventListener('input', ()=> setTimeout(updateCount, 0));
 
 function todayStr(){
   const d = new Date();
@@ -1017,24 +965,15 @@ async function loadInitial(){
         inp.value = val;
         inp.classList.remove('remote-update'); void inp.offsetWidth;
         inp.classList.add('remote-update');
-        playClickSound();
       }
       updateCount();
     })
     .subscribe(status=>{
-      console.log('names channel:', status);
       if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         showToast('اتصال زنده قطع شد، در حال تلاش دوباره…', true);
       }
     });
-  const presence = supabase.channel('presence-room', { config:{ presence:{ key: Math.random().toString(36).slice(2) } } });
-  presence.on('presence', { event:'sync' }, ()=>{
-    const n = Object.keys(presence.presenceState()).length;
-    document.getElementById('onlineCount').textContent = toFa(n);
-  }).subscribe(async status=>{
-    console.log('presence channel:', status);
-    if(status === 'SUBSCRIBED') await presence.track({ at: Date.now() });
-  });
+
 async function saveName(key, inp){
   const v = inp.value;
   const clean = (v && /[a-zA-Z]/.test(v)) ? translit(v) : v;
@@ -1078,84 +1017,24 @@ async function saveName(key, inp){
     const target = sec < 16*3600 ? 16*3600 : 86400;
     return (target - sec) * 1000 + 5000;
   }
+
   async function handleDailyReset(){
-    // پاک‌سازی را cron در Supabase انجام می‌دهد؛ اینجا فقط مارکر هماهنگ می‌شود
     try{
       const period = resetPeriodKey();
       const { data } = await supabase.from('names').select('value').eq('key', RESET_MARKER_KEY).maybeSingle();
-      if((data ? data.value : null) !== period){
+      const last = data ? data.value : null;
+      if(last !== period){
+        await supabase.from('names').delete().neq('key', RESET_MARKER_KEY);
         await supabase.from('names').upsert({ key: RESET_MARKER_KEY, value: period, date: todayStr() });
       }
-    }catch(e){}
+    }catch(e){ /* ممکنه تب دیگه‌ای همزمان ریست کرده باشه */ }
+
     setTimeout(handleDailyReset, msUntilNextReset());
   }
 
   handleDailyReset();
 } 
 initLiveNames();
-(function(){
-  const el = document.getElementById('resetCountdown');
-  function tehranSec(){
-    const p = {};
-    new Intl.DateTimeFormat('en-US', {
-      timeZone:'Asia/Tehran', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23'
-    }).formatToParts(new Date()).forEach(x=>{ p[x.type] = x.value; });
-    return +p.hour*3600 + +p.minute*60 + +p.second;
-  }
-  function tick(){
-    const s = tehranSec();
-    const left = (s < 16*3600 ? 16*3600 : 86400) - s;
-    const h = Math.floor(left/3600), m = Math.floor(left%3600/60), sc = left%60;
-    el.textContent = toFa([h,m,sc].map(n=>String(n).padStart(2,'0')).join(':'));
-  }
-  tick(); setInterval(tick, 1000);
-})();
-(function(){
-  if (REDUCE_MOTION || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-  const card = document.getElementById('card');
-  const stage = card.parentElement;
-  stage.style.perspective = '1200px';
-  card.style.transition = 'transform .15s ease-out';
-  stage.addEventListener('pointermove', e=>{
-    const r = card.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - .5;
-    const y = (e.clientY - r.top) / r.height - .5;
-    card.style.transform = `rotateY(${x * -4}deg) rotateX(${y * 4}deg)`;
-  });
-  stage.addEventListener('pointerleave', ()=>{ card.style.transform = ''; });
-})();
-(function(){
-  const colors = ['#6d5bff','#4f7bff','#2fd3a7','#ffd166','#ff6b7d'];
-  function burst(x, y){
-    for(let i = 0; i < 22; i++){
-      const p = document.createElement('i');
-      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
-      p.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:6px;height:6px;border-radius:2px;background:${colors[i % 5]};pointer-events:none;z-index:200;transition:transform .8s cubic-bezier(.2,.8,.3,1),opacity .8s;`;
-      document.body.appendChild(p);
-      requestAnimationFrame(()=>{
-        p.style.transform = `translate(${Math.cos(a) * d}px,${Math.sin(a) * d + 30}px) rotate(${Math.random() * 540}deg)`;
-        p.style.opacity = 0;
-      });
-      setTimeout(()=>p.remove(), 900);
-    }
-  }
-  const tb = document.getElementById('tbody');
-  const filledCount = tr => [...tr.querySelectorAll('input[data-key]')].filter(i=>i.value.trim()).length;
-  tb.addEventListener('focusin', e=>{
-    const tr = e.target.closest('tr'); if(!tr) return;
-    tr.dataset.wasFull = filledCount(tr) === 2 ? '1' : '';
-  });
-  tb.addEventListener('focusout', e=>{
-    const tr = e.target.closest('tr'); if(!tr) return;
-    setTimeout(()=>{
-      if(!tr.dataset.wasFull && filledCount(tr) === 2){
-        const r = tr.getBoundingClientRect();
-        burst(r.left + r.width / 2, r.top + r.height / 2);
-      }
-    }, 900);
-  });
-})();
-
 </script>
 <script src="panel-fx.js"></script>
 </body>
