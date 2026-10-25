@@ -1076,18 +1076,15 @@ async function saveName(key, inp){
     const target = sec < 16*3600 ? 16*3600 : 86400;
     return (target - sec) * 1000 + 5000;
   }
-
   async function handleDailyReset(){
+    // پاک‌سازی را cron در Supabase انجام می‌دهد؛ اینجا فقط مارکر هماهنگ می‌شود
     try{
       const period = resetPeriodKey();
       const { data } = await supabase.from('names').select('value').eq('key', RESET_MARKER_KEY).maybeSingle();
-      const last = data ? data.value : null;
-      if(last !== period){
-        await supabase.from('names').delete().neq('key', RESET_MARKER_KEY);
+      if((data ? data.value : null) !== period){
         await supabase.from('names').upsert({ key: RESET_MARKER_KEY, value: period, date: todayStr() });
       }
-    }catch(e){ /* ممکنه تب دیگه‌ای همزمان ریست کرده باشه */ }
-
+    }catch(e){}
     setTimeout(handleDailyReset, msUntilNextReset());
   }
 
